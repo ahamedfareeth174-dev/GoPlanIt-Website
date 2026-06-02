@@ -40,7 +40,21 @@ function userKey(baseKey) {
 
 function loadJson(key, fallback) {
   const stored = localStorage.getItem(key);
-  return stored ? JSON.parse(stored) : fallback;
+  if (!stored) return fallback;
+  try {
+    return JSON.parse(stored);
+  } catch {
+    localStorage.removeItem(key);
+    return fallback;
+  }
+}
+
+function sanitizeEnum(value, allowed, fallback) {
+  return allowed.includes(value) ? value : fallback;
+}
+
+function sanitizeColor(value, fallback) {
+  return /^#[0-9a-fA-F]{6}$/.test(String(value || '')) ? value : fallback;
 }
 
 function getInitials(name) {
@@ -54,12 +68,18 @@ function getInitials(name) {
 }
 
 function getProfile() {
-  return loadJson(userKey(PROFILE_KEY), {
+  const profile = loadJson(userKey(PROFILE_KEY), {
     banner: 'aurora',
     accent: '#22c55e',
     background: '#09121d',
     mode: 'light'
   });
+  return {
+    banner: sanitizeEnum(profile.banner, ['aurora', 'sunrise', 'midnight', 'meadow'], 'aurora'),
+    accent: sanitizeColor(profile.accent, '#22c55e'),
+    background: sanitizeColor(profile.background, '#09121d'),
+    mode: sanitizeEnum(profile.mode, ['light', 'dark'], 'light')
+  };
 }
 
 function applyProfile(profile) {
@@ -149,9 +169,9 @@ async function saveName(name) {
 async function handleSaveProfile() {
   const name = profileName.value.trim() || 'Planner';
   const profile = {
-    banner: profileBanner.value,
-    accent: profileAccent.value,
-    background: profileBackground.value,
+    banner: sanitizeEnum(profileBanner.value, ['aurora', 'sunrise', 'midnight', 'meadow'], 'aurora'),
+    accent: sanitizeColor(profileAccent.value, '#22c55e'),
+    background: sanitizeColor(profileBackground.value, '#09121d'),
     mode: profileDarkMode.checked ? 'dark' : 'light'
   };
 

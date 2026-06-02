@@ -13,7 +13,13 @@ const PRIVATE_PAGES = [
 function getNavSession() {
   const stored = localStorage.getItem(NAV_SESSION_KEY);
   if (!stored) return null;
-  const session = JSON.parse(stored);
+  let session;
+  try {
+    session = JSON.parse(stored);
+  } catch {
+    localStorage.removeItem(NAV_SESSION_KEY);
+    return null;
+  }
   if (session.expiresAt && session.expiresAt < Date.now()) {
     localStorage.removeItem(NAV_SESSION_KEY);
     return null;
@@ -30,14 +36,22 @@ function getNavUserKey(baseKey) {
 function applySavedProfileTheme() {
   const stored = localStorage.getItem(getNavUserKey(NAV_PROFILE_KEY));
   if (!stored) return;
-  const profile = JSON.parse(stored);
-  document.body.dataset.theme = profile.mode || 'light';
-  document.body.dataset.banner = profile.banner || document.body.dataset.banner || 'aurora';
-  if (profile.accent) {
+  let profile;
+  try {
+    profile = JSON.parse(stored);
+  } catch {
+    localStorage.removeItem(getNavUserKey(NAV_PROFILE_KEY));
+    return;
+  }
+  const mode = ['light', 'dark'].includes(profile.mode) ? profile.mode : 'light';
+  const banner = ['aurora', 'sunrise', 'midnight', 'meadow'].includes(profile.banner) ? profile.banner : 'aurora';
+  document.body.dataset.theme = mode;
+  document.body.dataset.banner = banner;
+  if (/^#[0-9a-fA-F]{6}$/.test(String(profile.accent || ''))) {
     document.documentElement.style.setProperty('--accent', profile.accent);
     document.documentElement.style.setProperty('--accent-strong', profile.accent);
   }
-  if (profile.background) {
+  if (/^#[0-9a-fA-F]{6}$/.test(String(profile.background || ''))) {
     document.documentElement.style.setProperty('--custom-bg', profile.background);
   }
 }

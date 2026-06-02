@@ -73,6 +73,32 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;');
 }
 
+function sanitizePlainText(value, limit = 1000) {
+  return String(value ?? '')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .slice(0, limit);
+}
+
+function sanitizeEnum(value, allowed, fallback) {
+  return allowed.includes(value) ? value : fallback;
+}
+
+function sanitizeNote(note) {
+  const now = new Date().toISOString();
+  return {
+    id: sanitizePlainText(note.id, 80) || Date.now().toString(),
+    title: sanitizePlainText(note.title, 160) || 'Untitled note',
+    body: sanitizePlainText(note.body, 12000),
+    category: sanitizeEnum(note.category, ['study', 'projects', 'ideas', 'personal'], 'study'),
+    color: sanitizeEnum(note.color, ['green', 'blue', 'yellow', 'pink'], 'green'),
+    tags: Array.isArray(note.tags) ? note.tags.slice(0, 12).map((tag) => sanitizePlainText(tag, 32).trim()).filter(Boolean) : [],
+    pinned: Boolean(note.pinned),
+    archived: Boolean(note.archived),
+    created: sanitizePlainText(note.created, 40) || now,
+    updated: sanitizePlainText(note.updated, 40) || now
+  };
+}
+
 function showToast(message) {
   let stack = document.getElementById('toastStack');
   if (!stack) {
@@ -237,11 +263,11 @@ function handleNewNote() {
 function readEditorNote(note) {
   return {
     ...note,
-    title: noteTitle.value.trim() || 'Untitled note',
-    category: noteCategory.value,
-    color: noteColor.value,
-    tags: noteTags.value.split(',').map((tag) => tag.trim()).filter(Boolean),
-    body: noteBody.value,
+    title: sanitizePlainText(noteTitle.value, 160).trim() || 'Untitled note',
+    category: sanitizeEnum(noteCategory.value, ['study', 'projects', 'ideas', 'personal'], 'study'),
+    color: sanitizeEnum(noteColor.value, ['green', 'blue', 'yellow', 'pink'], 'green'),
+    tags: noteTags.value.split(',').map((tag) => sanitizePlainText(tag, 32).trim()).filter(Boolean).slice(0, 12),
+    body: sanitizePlainText(noteBody.value, 12000),
     updated: new Date().toISOString()
   };
 }
@@ -341,7 +367,8 @@ function handleFilterClick(event) {
 
 function initNotes() {
   applyProfileTheme();
-  notes = loadJson(userKey(NOTES_KEY), []);
+  notes = loadJson(userKey(NOTES_KEY), []).map(sanitizeNote);
+  saveNotes();
   activeNoteId = notes.find((note) => !note.archived)?.id || notes[0]?.id || '';
   renderNotes();
   newNoteButton.addEventListener('click', handleNewNote);

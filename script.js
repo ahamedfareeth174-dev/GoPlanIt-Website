@@ -80,6 +80,18 @@ const quoteClosers = [
   'choose progress over pressure',
   'start where the path is clearest'
 ];
+const BACKUP_ALLOWED_KEYS = new Set([
+  STORAGE_KEY,
+  NOTES_KEY,
+  SETTINGS_KEY,
+  REMINDER_CONTACT_KEY,
+  PROFILE_KEY,
+  CALENDAR_SETTINGS_KEY,
+  STUDY_SETTINGS_KEY,
+  STUDY_MATERIALS_KEY,
+  ONBOARDING_KEY
+]);
+const MAX_BACKUP_BYTES = 1024 * 1024;
 
 let tasks = [];
 let session = null;
@@ -133,7 +145,8 @@ function loadState() {
   const settings = loadJson(userKey(SETTINGS_KEY), {});
   const today = dayNames[new Date().getDay()];
 
-  tasks = loadJson(userKey(STORAGE_KEY), []);
+  tasks = loadJson(userKey(STORAGE_KEY), []).map(sanitizeImportedTask);
+  localStorage.setItem(userKey(STORAGE_KEY), JSON.stringify(tasks));
   plannerDay.value = settings.plannerDay || today;
   weeklyHourGoal.value = settings.weeklyHourGoal || '20';
   showCompleted.checked = settings.showCompleted || false;
@@ -269,6 +282,33 @@ function escapeHtml(value) {
     .replaceAll("'", '&#039;');
 }
 
+function sanitizePlainText(value, limit = 1000) {
+  return String(value ?? '')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .slice(0, limit);
+}
+
+function sanitizeEnum(value, allowed, fallback) {
+  return allowed.includes(value) ? value : fallback;
+}
+
+function sanitizeEmail(value) {
+  const email = sanitizePlainText(value, 120).trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '';
+}
+
+function sanitizePhone(value) {
+  return sanitizePlainText(value, 32).replace(/[^\d+]/g, '').slice(0, 20);
+}
+
+function sanitizeDateKey(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? value : '';
+}
+
+function sanitizeTime(value, fallback = '') {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || '')) ? value : fallback;
+}
+
 function getReminderContact() {
   return loadJson(userKey(REMINDER_CONTACT_KEY), {});
 }
@@ -277,20 +317,22 @@ function buildReminderMessage(task) {
   const dateText = task.dueDate ? `Due: ${task.dueDate}` : `Day: ${task.day || 'Mon'}`;
   const timeText = task.startTime ? ` Time: ${task.startTime}.` : '';
   const notesText = task.notes ? ` Notes: ${task.notes}` : '';
-  return `GoPlanIt reminder: ${getCategoryLabel(task)} - ${task.text}. ${dateText}.${timeText} Priority: ${task.priority || 'medium'}.${notesText}`;
+  return `DueBoard reminder: ${getCategoryLabel(task)} - ${task.text}. ${dateText}.${timeText} Priority: ${task.priority || 'medium'}.${notesText}`;
 }
 
 function renderReminderSendLinks(task) {
   const contact = getReminderContact();
   const message = encodeURIComponent(buildReminderMessage(task));
-  const subject = encodeURIComponent(`GoPlanIt reminder: ${task.text}`);
+  const subject = encodeURIComponent(`DueBoard reminder: ${task.text}`);
   const links = [];
+  const email = sanitizeEmail(contact.email);
+  const phone = sanitizePhone(contact.phone);
 
-  if (contact.email) {
-    links.push(`<a class="reminder-send-link" href="mailto:${encodeURIComponent(contact.email)}?subject=${subject}&body=${message}">Email reminder</a>`);
+  if (email) {
+    links.push(`<a class="reminder-send-link" href="mailto:${encodeURIComponent(email)}?subject=${subject}&body=${message}">Email reminder</a>`);
   }
-  if (contact.phone) {
-    links.push(`<a class="reminder-send-link" href="sms:${encodeURIComponent(contact.phone)}?&body=${message}">Text reminder</a>`);
+  if (phone) {
+    links.push(`<a class="reminder-send-link" href="sms:${encodeURIComponent(phone)}?&body=${message}">Text reminder</a>`);
   }
 
   if (!links.length) {
@@ -496,7 +538,7 @@ function renderTodayFocus() {
     todayFocusCard.innerHTML = `
       <div class="empty-state compact">
         <strong>No focus task yet</strong>
-        <p>Add a task for today and GoPlanIt will pick the strongest next step.</p>
+        <p>Add a task for today and DueBoard will pick the strongest next step.</p>
         <button class="btn btn-secondary" type="button" data-action="sample-task">Add sample task</button>
       </div>
     `;
@@ -632,7 +674,7 @@ function getBackupPayload() {
     data[key] = loadJson(userKey(key), null);
   });
   return {
-    app: 'GoPlanIt',
+    app: 'DueBoard',
     version: 1,
     exportedAt: new Date().toISOString(),
     account: session ? { email: session.email, name: session.name } : null,
@@ -643,7 +685,7 @@ function getBackupPayload() {
 function handleExportPlannerData() {
   const payload = getBackupPayload();
   const date = toDateKey(new Date());
-  downloadFile(`goplanit-backup-${date}.json`, 'application/json', JSON.stringify(payload, null, 2));
+  downloadFile(`dueboard-backup-${date}.json`, 'application/json', JSON.stringify(payload, null, 2));
   showToast('Planner backup exported.');
 }
 
@@ -651,9 +693,103 @@ function handleImportPlannerData() {
   importPlannerFile.click();
 }
 
+function sanitizeImportedTask(task) {
+  task = task && typeof task === 'object' ? task : {};
+  const dueDate = sanitizeDateKey(task.dueDate);
+  const day = dueDate ? getDayFromDateKey(dueDate) : sanitizeEnum(task.day, plannerDayNames, 'Mon');
+  return {
+    id: sanitizePlainText(task.id, 80) || Date.now().toString() + Math.random().toString(16).slice(2),
+    text: sanitizePlainText(task.text, 180) || 'Imported task',
+    notes: sanitizePlainText(task.notes, 800),
+    type: sanitizeEnum(task.type, ['daily', 'weekly'], 'daily'),
+    category: sanitizeEnum(task.category, ['assignment', 'exam', 'reminder', 'task'], 'task'),
+    dueDate,
+    priority: sanitizeEnum(task.priority, ['high', 'medium', 'low'], 'medium'),
+    day,
+    startTime: sanitizeTime(task.startTime, ''),
+    hours: Math.max(0.25, Math.min(24, Number(task.hours) || 1)),
+    completed: Boolean(task.completed),
+    created: sanitizePlainText(task.created, 40) || new Date().toISOString()
+  };
+}
+
+function sanitizeImportedNote(note) {
+  note = note && typeof note === 'object' ? note : {};
+  return {
+    id: sanitizePlainText(note.id, 80) || Date.now().toString() + Math.random().toString(16).slice(2),
+    title: sanitizePlainText(note.title, 160) || 'Imported note',
+    body: sanitizePlainText(note.body, 12000),
+    category: sanitizeEnum(note.category, ['study', 'projects', 'ideas', 'personal'], 'study'),
+    color: sanitizeEnum(note.color, ['green', 'blue', 'yellow', 'pink'], 'green'),
+    tags: Array.isArray(note.tags) ? note.tags.slice(0, 12).map((tag) => sanitizePlainText(tag, 32)).filter(Boolean) : [],
+    pinned: Boolean(note.pinned),
+    archived: Boolean(note.archived),
+    created: sanitizePlainText(note.created, 40) || new Date().toISOString(),
+    updated: sanitizePlainText(note.updated, 40) || new Date().toISOString()
+  };
+}
+
+function sanitizeImportedProfile(profile) {
+  profile = profile && typeof profile === 'object' ? profile : {};
+  return {
+    banner: sanitizeEnum(profile.banner, ['aurora', 'sunrise', 'midnight', 'meadow'], 'aurora'),
+    accent: /^#[0-9a-fA-F]{6}$/.test(String(profile.accent || '')) ? profile.accent : '#2563eb',
+    background: /^#[0-9a-fA-F]{6}$/.test(String(profile.background || '')) ? profile.background : '#f6f8fb',
+    mode: sanitizeEnum(profile.mode, ['light', 'dark'], 'light')
+  };
+}
+
+function sanitizeImportedBackupData(data) {
+  const clean = {};
+  Object.entries(data || {}).forEach(([key, value]) => {
+    if (!BACKUP_ALLOWED_KEYS.has(key)) return;
+    if (key === STORAGE_KEY) clean[key] = Array.isArray(value) ? value.slice(0, 500).map(sanitizeImportedTask) : [];
+    if (key === NOTES_KEY) clean[key] = Array.isArray(value) ? value.slice(0, 300).map(sanitizeImportedNote) : [];
+    if (key === SETTINGS_KEY) {
+      clean[key] = {
+        plannerDay: sanitizeEnum(value?.plannerDay, plannerDayNames, 'Mon'),
+        weeklyHourGoal: String(Math.max(1, Math.min(70, Number(value?.weeklyHourGoal) || 20))),
+        showCompleted: Boolean(value?.showCompleted)
+      };
+    }
+    if (key === REMINDER_CONTACT_KEY) {
+      clean[key] = {
+        email: sanitizeEmail(value?.email),
+        phone: sanitizePhone(value?.phone),
+        updated: new Date().toISOString()
+      };
+    }
+    if (key === PROFILE_KEY) clean[key] = sanitizeImportedProfile(value || {});
+    if (key === CALENDAR_SETTINGS_KEY) {
+      clean[key] = {
+        day: sanitizeEnum(value?.day, plannerDayNames, 'Mon'),
+        month: Math.max(0, Math.min(11, Number(value?.month) || 0)),
+        year: Math.max(1970, Math.min(2100, Number(value?.year) || new Date().getFullYear())),
+        selectedDate: sanitizeDateKey(value?.selectedDate) || toDateKey(new Date()),
+        start: sanitizeTime(value?.start, '08:00'),
+        end: sanitizeTime(value?.end, '18:00')
+      };
+    }
+    if (key === STUDY_SETTINGS_KEY) {
+      clean[key] = {
+        minutes: Math.max(1, Math.min(180, Number(value?.minutes) || 25)),
+        sound: sanitizeEnum(value?.sound, ['digital', 'urgent', 'siren', 'school'], 'digital')
+      };
+    }
+    if (key === STUDY_MATERIALS_KEY) clean[key] = [];
+    if (key === ONBOARDING_KEY) clean[key] = { completed: Boolean(value?.completed), updated: new Date().toISOString() };
+  });
+  return clean;
+}
+
 function handleImportPlannerFile(event) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
+  if (file.size > MAX_BACKUP_BYTES || !file.name.toLowerCase().endsWith('.json')) {
+    showToast('Backup must be a JSON file under 1 MB.');
+    importPlannerFile.value = '';
+    return;
+  }
   const confirmed = window.confirm('Importing a backup can overwrite planner data for this logged-in account. Continue?');
   if (!confirmed) {
     importPlannerFile.value = '';
@@ -663,11 +799,12 @@ function handleImportPlannerFile(event) {
   reader.onload = () => {
     try {
       const backup = JSON.parse(String(reader.result || '{}'));
-      if (backup.app !== 'GoPlanIt' || !backup.data) {
-        showToast('This is not a GoPlanIt backup.');
+      if (backup.app !== 'DueBoard' || !backup.data) {
+        showToast('This is not a DueBoard backup.');
         return;
       }
-      Object.entries(backup.data).forEach(([key, value]) => {
+      const cleanData = sanitizeImportedBackupData(backup.data);
+      Object.entries(cleanData).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
           localStorage.setItem(userKey(key), JSON.stringify(value));
         }
@@ -903,7 +1040,7 @@ function renderAutoDailyPlan() {
     aiResponse.innerHTML = `
       <div class="empty-state compact">
         <strong>No daily plan yet</strong>
-        <p>Add a reminder on today's calendar date and GoPlanIt will build the schedule here automatically.</p>
+        <p>Add a reminder on today's calendar date and DueBoard will build the schedule here automatically.</p>
       </div>
     `;
     return;
@@ -974,3 +1111,4 @@ function init() {
 }
 
 init();
+

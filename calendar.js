@@ -93,7 +93,10 @@ function applyProfileTheme() {
 
 function loadTasks() {
   const stored = localStorage.getItem(userKey(STORAGE_KEY));
-  return stored ? JSON.parse(stored) : [];
+  const tasks = stored ? JSON.parse(stored) : [];
+  const cleanTasks = tasks.map(sanitizeTask);
+  if (stored) saveTasks(cleanTasks);
+  return cleanTasks;
 }
 
 function loadSettings() {
@@ -380,6 +383,43 @@ function escapeHtml(value) {
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#039;');
+}
+
+function sanitizePlainText(value, limit = 1000) {
+  return String(value ?? '')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .slice(0, limit);
+}
+
+function sanitizeEnum(value, allowed, fallback) {
+  return allowed.includes(value) ? value : fallback;
+}
+
+function sanitizeDateKey(value) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(value || '')) ? value : '';
+}
+
+function sanitizeTime(value, fallback = '') {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || '')) ? value : fallback;
+}
+
+function sanitizeTask(task) {
+  task = task && typeof task === 'object' ? task : {};
+  const dueDate = sanitizeDateKey(task.dueDate);
+  return {
+    id: sanitizePlainText(task.id, 80) || Date.now().toString() + Math.random().toString(16).slice(2),
+    text: sanitizePlainText(task.text, 180) || 'Imported task',
+    notes: sanitizePlainText(task.notes, 800),
+    type: sanitizeEnum(task.type, ['daily', 'weekly'], 'daily'),
+    category: sanitizeEnum(task.category, ['assignment', 'exam', 'reminder', 'task'], 'task'),
+    dueDate,
+    priority: sanitizeEnum(task.priority, ['high', 'medium', 'low'], 'medium'),
+    day: dueDate ? getDayFromDateKey(dueDate) : sanitizeEnum(task.day, plannerDayNames, 'Mon'),
+    startTime: sanitizeTime(task.startTime, ''),
+    hours: Math.max(0.25, Math.min(24, Number(task.hours) || 1)),
+    completed: Boolean(task.completed),
+    created: sanitizePlainText(task.created, 40) || new Date().toISOString()
+  };
 }
 
 function getDayOptions(selectedDay) {
@@ -710,7 +750,7 @@ function addCalendarTask(event) {
     return;
   }
   const isReminder = calendarTaskCategory.value === 'reminder';
-  const text = isReminder ? calendarTaskNotes.value.trim() : calendarTaskText.value.trim();
+  const text = sanitizePlainText(isReminder ? calendarTaskNotes.value : calendarTaskText.value, 180).trim();
   if (!text) return;
   if (calendarTaskCategory.value !== 'task' && !calendarTaskDueDate.value) {
     return;
@@ -723,7 +763,7 @@ function addCalendarTask(event) {
   const newTask = {
     id: Date.now().toString(),
     text,
-    notes: isReminder ? text : '',
+    notes: isReminder ? text : sanitizePlainText(calendarTaskNotes.value, 800),
     type: isReminder ? 'daily' : calendarTaskType.value,
     category: calendarTaskCategory.value,
     dueDate,
@@ -759,12 +799,18 @@ function updateCalendarTask(target) {
 
   let value = target.value;
   if (field === 'text') {
-    value = value.trim();
+    value = sanitizePlainText(value, 180).trim();
     if (!value) {
       renderCalendar();
       return;
     }
   }
+  if (field === 'notes') value = sanitizePlainText(value, 800);
+  if (field === 'type') value = sanitizeEnum(value, ['daily', 'weekly'], 'daily');
+  if (field === 'category') value = sanitizeEnum(value, ['assignment', 'exam', 'reminder', 'task'], 'task');
+  if (field === 'priority') value = sanitizeEnum(value, ['high', 'medium', 'low'], 'medium');
+  if (field === 'day') value = sanitizeEnum(value, plannerDayNames, 'Mon');
+  if (field === 'startTime') value = sanitizeTime(value, '');
   if (field === 'hours') {
     value = Number(value);
     if (Number.isNaN(value) || value <= 0) {
@@ -776,6 +822,8 @@ function updateCalendarTask(target) {
   const tasks = loadTasks().map((task) => {
     if (task.id !== id) return task;
     if (field === 'dueDate' && value) {
+      value = sanitizeDateKey(value);
+      if (!value) return task;
       return { ...task, dueDate: value, day: getDayFromDateKey(value) };
     }
     return { ...task, [field]: value };

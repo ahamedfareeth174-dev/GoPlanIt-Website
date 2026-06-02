@@ -46,6 +46,21 @@ function normalizeUsername(value) {
   return String(value || '').trim().toLowerCase().replace(/[^a-z0-9_]/g, '');
 }
 
+function sanitizePlainText(value, limit = 1000) {
+  return String(value ?? '')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .slice(0, limit);
+}
+
+function sanitizeEmail(value) {
+  const email = sanitizePlainText(value, 120).trim().toLowerCase();
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : '';
+}
+
+function sanitizePhone(value) {
+  return sanitizePlainText(value, 32).replace(/[^\d+]/g, '').slice(0, 20);
+}
+
 function createSession(email, name) {
   const expiresAt = Date.now() + SESSION_HOURS * 60 * 60 * 1000;
   localStorage.setItem(SESSION_KEY, JSON.stringify({ email, name, expiresAt }));
@@ -171,14 +186,24 @@ function showAuthView(viewId) {
 async function handleSignup(event) {
   event.preventDefault();
   try {
-    const name = document.getElementById('signupName').value.trim();
+    const name = sanitizePlainText(document.getElementById('signupName').value, 80).trim();
     const username = normalizeUsername(document.getElementById('signupUsername').value);
-    const email = document.getElementById('signupEmail').value.trim().toLowerCase();
+    const email = sanitizeEmail(document.getElementById('signupEmail').value);
     const password = document.getElementById('signupPassword').value;
     const users = await getUsersFromStorage();
 
-    if (username.length < 3) {
-      showMessage(accountMessage, 'Username needs at least 3 letters or numbers.', 'error');
+    if (!name) {
+      showMessage(accountMessage, 'Name is required.', 'error');
+      return;
+    }
+
+    if (username.length < 3 || username.length > 24) {
+      showMessage(accountMessage, 'Username needs 3 to 24 letters, numbers, or underscores.', 'error');
+      return;
+    }
+
+    if (!email) {
+      showMessage(accountMessage, 'Enter a valid email address.', 'error');
       return;
     }
 
@@ -235,7 +260,7 @@ async function handleSignup(event) {
 async function handleLogin(event) {
   event.preventDefault();
   try {
-    const identifier = document.getElementById('loginIdentifier').value.trim().toLowerCase();
+    const identifier = sanitizePlainText(document.getElementById('loginIdentifier').value, 120).trim().toLowerCase();
     const password = document.getElementById('loginPassword').value;
     if (isLocked(identifier)) {
       const minutes = Math.ceil((getLoginLock(identifier).lockedUntil - Date.now()) / 60000);
@@ -271,7 +296,7 @@ async function handleLogin(event) {
 async function handleForgotPassword(event) {
   event.preventDefault();
   try {
-    const identifier = document.getElementById('resetIdentifier').value.trim().toLowerCase();
+    const identifier = sanitizePlainText(document.getElementById('resetIdentifier').value, 120).trim().toLowerCase();
     const password = document.getElementById('resetPassword').value;
     const issues = getPasswordIssues(password);
     if (issues.length) {
@@ -313,8 +338,12 @@ async function handleForgotPassword(event) {
 async function handleContact(event) {
   event.preventDefault();
   try {
-    const email = document.getElementById('contactEmail').value.trim().toLowerCase();
-    const message = document.getElementById('contactMessage').value.trim();
+    const email = sanitizeEmail(document.getElementById('contactEmail').value);
+    const message = sanitizePlainText(document.getElementById('contactMessage').value, 2000).trim();
+    if (!email || !message) {
+      showMessage(contactStatus, 'Enter a valid email and message.', 'error');
+      return;
+    }
     const contactMessage = {
       id: Date.now().toString(),
       email,
@@ -351,8 +380,8 @@ function loadReminderContact() {
 
 function handleReminderContact(event) {
   event.preventDefault();
-  const email = document.getElementById('reminderEmail').value.trim().toLowerCase();
-  const phone = document.getElementById('reminderPhone').value.trim();
+  const email = sanitizeEmail(document.getElementById('reminderEmail').value);
+  const phone = sanitizePhone(document.getElementById('reminderPhone').value);
 
   localStorage.setItem(userKey(REMINDER_CONTACT_KEY), JSON.stringify({
     email,

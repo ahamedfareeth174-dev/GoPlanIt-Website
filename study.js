@@ -30,6 +30,8 @@ const SESSION_KEY = 'goplanitSession';
 const PROFILE_KEY = 'goplanitProfile';
 const STUDY_SETTINGS_KEY = 'goplanitStudySettings';
 const STUDY_MATERIALS_KEY = 'goplanitStudyMaterials';
+const MAX_TEXT_UPLOAD_BYTES = 1024 * 1024;
+const MAX_DOCUMENT_UPLOAD_BYTES = 5 * 1024 * 1024;
 let secondsLeft = 25 * 60;
 let timerId = null;
 let alarmLoopId = null;
@@ -81,6 +83,16 @@ function applyProfileTheme() {
 
 function escapeHtml(value) {
   return String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+}
+
+function sanitizePlainText(value, limit = 8000) {
+  return String(value ?? '')
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .slice(0, limit);
+}
+
+function sanitizeFileName(value) {
+  return sanitizePlainText(value, 120).replace(/[<>:"/\\|?*]+/g, ' ').trim() || 'Study material';
 }
 
 function sanitizeFont(value) {
@@ -175,23 +187,22 @@ function renderStudyPlan() {
 }
 
 function getReadableFileType(file) {
-  const name = file.name.toLowerCase();
+  const name = sanitizeFileName(file.name).toLowerCase();
   if (name.endsWith('.pdf')) return 'PDF study guide';
   if (name.endsWith('.doc') || name.endsWith('.docx')) return 'Word study guide';
   if (name.endsWith('.csv')) return 'CSV notes';
   if (name.endsWith('.json')) return 'JSON notes';
-  if (name.endsWith('.html') || name.endsWith('.htm')) return 'HTML notes';
   if (name.endsWith('.md')) return 'Markdown notes';
   return 'Notes';
 }
 
 function isDocumentGuideFile(file) {
-  const name = file.name.toLowerCase();
-  return name.endsWith('.pdf') || name.endsWith('.doc') || name.endsWith('.docx');
+  const name = sanitizeFileName(file.name).toLowerCase();
+  return ['.pdf', '.doc', '.docx'].some((ext) => name.endsWith(ext)) && file.size <= MAX_DOCUMENT_UPLOAD_BYTES;
 }
 
 function buildSimulatedGuideText(file) {
-  const title = file.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
+  const title = sanitizeFileName(file.name).replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ');
   const frequentTitleWords = getWordFrequency(title);
   const topicWords = frequentTitleWords.length ? frequentTitleWords : title.split(/\s+/).filter((word) => word.length > 2);
   const topics = topicWords.length ? topicWords.slice(0, 5) : ['main ideas', 'key terms', 'examples'];
@@ -306,15 +317,16 @@ function saveStudyMaterials() {
 }
 
 function addMaterial(name, type, text, fallbackMessage = '') {
-  const summary = summarizeText(text);
+  const safeText = sanitizePlainText(text, 20000).trim();
+  const summary = summarizeText(safeText);
   const material = {
     id: Date.now().toString() + Math.random().toString(16).slice(2),
-    name,
+    name: sanitizeFileName(name),
     type,
     font: sanitizeFont(studyNoteFont.value),
-    text: text.trim(),
-    summary: text.trim() ? summary.summary : fallbackMessage,
-    bullets: text.trim() ? summary.bullets : [fallbackMessage],
+    text: safeText,
+    summary: safeText ? summary.summary : sanitizePlainText(fallbackMessage, 500),
+    bullets: safeText ? summary.bullets : [sanitizePlainText(fallbackMessage, 500)],
     keywords: summary.keywords,
     created: new Date().toISOString()
   };
@@ -333,8 +345,11 @@ function readFileAsText(file) {
 }
 
 function canReadFile(file) {
-  const name = file.name.toLowerCase();
-  return file.type.startsWith('text/') || ['.txt', '.md', '.csv', '.json', '.html', '.htm'].some((ext) => name.endsWith(ext));
+  const name = sanitizeFileName(file.name).toLowerCase();
+  return file.size <= MAX_TEXT_UPLOAD_BYTES && (
+    file.type.startsWith('text/') ||
+    ['.txt', '.md', '.csv', '.json'].some((ext) => name.endsWith(ext))
+  );
 }
 
 async function handleMaterialUpload(event) {
@@ -344,21 +359,21 @@ async function handleMaterialUpload(event) {
     const type = getReadableFileType(file);
     if (canReadFile(file)) {
       const text = await readFileAsText(file);
-      addMaterial(file.name, type, text);
+      addMaterial(sanitizeFileName(file.name), type, text);
     } else if (isDocumentGuideFile(file)) {
-      addMaterial(file.name, type, buildSimulatedGuideText(file));
+      addMaterial(sanitizeFileName(file.name), type, buildSimulatedGuideText(file));
     } else {
       skippedCount += 1;
     }
   }
   if (skippedCount) {
-    studyTimerLabel.textContent = 'Unsupported files skipped. PDF and Word guides use fake AI scanning.';
+    studyTimerLabel.textContent = 'Unsupported, oversized, or unsafe files were skipped.';
   }
   studyMaterialInput.value = '';
 }
 
 function handlePastedSummary() {
-  const text = studyMaterialNotes.value.trim();
+  const text = sanitizePlainText(studyMaterialNotes.value, 20000).trim();
   if (!text) return;
   addMaterial('Pasted study notes', 'Notes', text);
   studyMaterialNotes.value = '';
@@ -383,7 +398,7 @@ function buildStudyExportHtml() {
     <html>
       <head>
         <meta charset="utf-8" />
-        <title>GoPlanIt Study Notes</title>
+        <title>DueBoard Study Notes</title>
         <style>
           body { color: #263238; font-family: Inter, Arial, sans-serif; line-height: 1.55; margin: 40px; }
           h1 { margin: 0 0 6px; }
@@ -395,7 +410,7 @@ function buildStudyExportHtml() {
         </style>
       </head>
       <body>
-        <h1>GoPlanIt Study Notes</h1>
+        <h1>DueBoard Study Notes</h1>
         <p class="date">Exported ${escapeHtml(created)}</p>
         ${cards || '<p>No study materials yet.</p>'}
       </body>
@@ -407,7 +422,7 @@ function exportMaterialsAsWord() {
     studyTimerLabel.textContent = 'Add study notes before exporting.';
     return;
   }
-  downloadFile('goplanit-study-notes.doc', 'application/msword', buildStudyExportHtml());
+  downloadFile('dueboard-study-notes.doc', 'application/msword', buildStudyExportHtml());
   studyTimerLabel.textContent = 'Study notes exported as a Word document.';
 }
 
@@ -739,3 +754,4 @@ function initStudy() {
 }
 
 initStudy();
+
