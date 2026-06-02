@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'" />
+    <meta name="referrer" content="no-referrer" />
+    <title>GoPlanIt - About</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="home-shell">
+      <nav class="home-nav">
+        <a class="brand-mark" href="index.html">GoPlanIt</a>
+        <div>
+          <a href="index.html">Home</a>
+          <a class="active" href="about.html">About</a>
+          <a class="auth-only-search" href="search.html">Search</a>
+          <a class="auth-only" href="notes.html">Notes</a>
+          <a class="auth-only" href="study.html">Study</a>
+          <a class="auth-only" href="notifications.html">Notifications</a>
+          <a class="auth-only" href="calendar.html">Calendar</a>
+          <a href="portal.html">Account</a>
+          <a class="nav-cta auth-only" href="dashboard.html">Open planner</a>
+        </div>
+      </nav>
+
+      <header class="portal-header about-header">
+        <p class="eyebrow">About GoPlanIt</p>
+        <h1>A student planner for assignments, reminders, notes, and study flow.</h1>
+        <p class="subtext">Made by Ahamed Fareeth. Connect on <a href="https://www.linkedin.com/in/ahamed-fareeth-ba6659257/" rel="noreferrer">LinkedIn</a>.</p>
+      </header>
+
+      <main class="about-grid">
+        <section class="auth-panel">
+          <div class="panel-header">
+            <h2>What it does</h2>
+            <p>GoPlanIt keeps school tasks, calendar dates, study notes, reminders, and priority planning in one browser-based workspace.</p>
+          </div>
+          <ul class="about-list">
+            <li>Add assignments, exams, reminders, and tasks from the calendar.</li>
+            <li>Review today's focus and upcoming work from the dashboard.</li>
+            <li>Save notes, create study summaries, and generate practice quizzes.</li>
+            <li>Search tasks and notes after logging in.</li>
+          </ul>
+        </section>
+
+        <section class="auth-panel">
+          <div class="panel-header">
+            <h2>Data and backups</h2>
+            <p>This demo stores account and planner data locally in your browser. Use dashboard backups before clearing browser data or moving devices.</p>
+          </div>
+          <ul class="about-list">
+            <li>Export backup downloads your planner data as a JSON file.</li>
+            <li>Import backup restores saved data for the current logged-in account.</li>
+            <li>Passwords are hashed when the browser supports the app database.</li>
+          </ul>
+        </section>
+
+        <section class="auth-panel">
+          <div class="panel-header">
+            <h2>How to start</h2>
+            <p>Create an account, try the demo planner, or log in and open the dashboard.</p>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="portal.html">Log in</a>
+            <a class="btn btn-secondary" href="index.html">Back home</a>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="nav-auth.js"></script>
+  </body>
+</html>

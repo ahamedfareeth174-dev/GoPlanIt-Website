@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'" />
+    <meta name="referrer" content="no-referrer" />
+    <title>GoPlanIt - Plan smarter</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="home-shell">
+      <nav class="home-nav">
+        <a class="brand-mark" href="index.html">GoPlanIt</a>
+        <div>
+          <a class="active" href="index.html">Home</a>
+          <a href="about.html">About</a>
+          <a class="auth-only-search" href="search.html">Search</a>
+          <a class="auth-only" href="notes.html">Notes</a>
+          <a class="auth-only" href="study.html">Study</a>
+          <a class="auth-only" href="notifications.html">Notifications</a>
+          <a class="auth-only" href="profile.html">Profile</a>
+          <a href="#account">Account</a>
+          <a href="#contact">Contact</a>
+          <a class="nav-cta auth-only" href="dashboard.html">Open planner</a>
+        </div>
+      </nav>
+
+      <header class="home-hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Academic planning, minus the chaos</p>
+          <h1>Turn assignments, exams, reminders, and tasks into a calm plan.</h1>
+          <p>
+            GoPlanIt helps students see what is due, what matters most, and what to do next.
+            Add items from a monthly calendar, review your week, and let the planner keep the mental clutter down.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary auth-only" href="calendar.html">Start planning</a>
+            <a class="btn btn-secondary" href="portal.html">Sign up or log in</a>
+            <button id="demoPlanner" class="btn btn-secondary" type="button">Try demo planner</button>
+          </div>
+        </div>
+        <div class="hero-preview" aria-label="GoPlanIt preview">
+          <div class="preview-card urgent">
+            <span>Exam</span>
+            <strong>Biology Midterm</strong>
+            <small>Due May 22 · high priority</small>
+          </div>
+          <div class="preview-card">
+            <span>Assignment</span>
+            <strong>History Essay Draft</strong>
+            <small>Due May 24 · medium priority</small>
+          </div>
+          <div class="preview-card soft">
+            <span>Reminder</span>
+            <strong>Email project partner</strong>
+            <small>Quick note saved</small>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="feature-band">
+          <div>
+            <h2>Built for real school weeks.</h2>
+            <p>Add homework due dates, exam reminders, quick notes, and regular tasks from one monthly calendar.</p>
+          </div>
+          <div>
+            <h2>Know what matters.</h2>
+            <p>Priority colors make the dashboard easy to scan: red for high, orange for medium, yellow for low.</p>
+          </div>
+          <div>
+            <h2>Review, edit, repeat.</h2>
+            <p>Edit every reminder, add brief notes, check off finished items, and keep your week moving.</p>
+          </div>
+          <div>
+            <h2>Capture ideas fast.</h2>
+            <p>Use the notes workspace for class notes, study plans, project ideas, and quick thoughts.</p>
+          </div>
+        </section>
+
+        <section class="product-showcase">
+          <div class="panel-header">
+            <h2>A planner that looks like your week.</h2>
+            <p>GoPlanIt brings calendar dates, priorities, notes, and reminders into one calm dashboard.</p>
+          </div>
+          <div class="product-mockup">
+            <div class="mock-calendar">
+              <div class="mock-month-header">
+                <strong>May</strong>
+                <span>Assignments · Exams · Reminders</span>
+              </div>
+              <div class="mock-days">
+                <span></span><span></span><span class="has-assignment">12</span><span>13</span><span class="has-exam">14</span><span>15</span><span>16</span>
+                <span>17</span><span class="has-reminder">18</span><span>19</span><span class="has-task">20</span><span>21</span><span>22</span><span>23</span>
+              </div>
+            </div>
+            <div class="mock-dashboard">
+              <span class="priority-chip priority-high">high</span>
+              <strong>Biology exam review</strong>
+              <small>Due today · notes saved · email ready</small>
+              <span class="priority-chip priority-medium">medium</span>
+              <strong>Essay outline</strong>
+              <small>Due this week · 2.00 hrs</small>
+            </div>
+          </div>
+        </section>
+
+        <section class="workflow-section">
+          <div class="panel-header">
+            <h2>One system, four work modes.</h2>
+            <p>GoPlanIt now connects planning, notes, search, and study sessions so the pieces talk to each other.</p>
+          </div>
+          <div class="workflow-grid">
+            <a class="auth-only-search" href="search.html">
+              <span>01</span>
+              <strong>Search everything</strong>
+              <p>Find tasks and notes from one place.</p>
+            </a>
+            <a class="auth-only" href="notes.html">
+              <span>02</span>
+              <strong>Capture notes</strong>
+              <p>Pin notes, tag ideas, and turn notes into tasks.</p>
+            </a>
+            <a class="auth-only" href="study.html">
+              <span>03</span>
+              <strong>Study mode</strong>
+              <p>Use today’s tasks and pinned notes for focus blocks.</p>
+            </a>
+            <a class="auth-only" href="notifications.html">
+              <span>04</span>
+              <strong>Notification center</strong>
+              <p>Track overdue, upcoming, exam, and pinned-note alerts.</p>
+            </a>
+          </div>
+        </section>
+
+        <section id="account" class="contact-panel account-cta-panel">
+          <div class="panel-header">
+            <h2>Sign up or log in</h2>
+            <p>Open the account page to create your own planner space, customize your dashboard, and keep reminders separate from other users.</p>
+          </div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="portal.html">Create an account</a>
+            <a class="btn btn-secondary" href="portal.html">Log in</a>
+          </div>
+        </section>
+
+        <section id="contact" class="contact-panel">
+          <div class="panel-header">
+            <h2>Contact the creator</h2>
+            <p>Send feedback, bug reports, or feature ideas to the creator of GoPlanIt.</p>
+          </div>
+          <form id="contactForm" class="home-form">
+            <label>
+              Your email
+              <input id="contactEmail" type="email" placeholder="you@example.com" required />
+            </label>
+            <label>
+              Message
+              <textarea id="contactMessage" rows="5" placeholder="Contact the creator..." required></textarea>
+            </label>
+            <button class="btn btn-primary" type="submit">Send message</button>
+          </form>
+          <div id="contactStatus" class="form-message" role="status"></div>
+        </section>
+      </main>
+    </div>
+
+    <script src="nav-auth.js"></script>
+    <script src="database.js"></script>
+    <script src="home.js"></script>
+  </body>
+</html>

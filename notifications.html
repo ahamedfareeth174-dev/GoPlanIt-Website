@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'" />
+    <meta name="referrer" content="no-referrer" />
+    <title>GoPlanIt - Notifications</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Notification center</p>
+          <h1>See what needs attention.</h1>
+          <p class="subtext">Upcoming due dates, overdue work, exams, and pinned notes appear here automatically.</p>
+        </div>
+        <div class="status-card">
+          <strong id="notificationCount">0 alerts</strong>
+          <span>Generated from saved planner data.</span>
+        </div>
+      </header>
+
+      <nav class="page-actions" aria-label="Planner navigation">
+        <a class="link-button" href="index.html">Home</a>
+        <a class="link-button auth-only-search" href="search.html">Search</a>
+        <a class="link-button" href="notes.html">Notes</a>
+        <a class="link-button" href="study.html">Study</a>
+        <a class="link-button active" href="notifications.html">Notifications</a>
+        <a class="link-button" href="profile.html">Profile</a>
+        <a class="link-button" href="dashboard.html">Dashboard</a>
+      </nav>
+
+      <main class="notification-center">
+        <section id="notificationList" class="notification-list"></section>
+      </main>
+    </div>
+
+    <script src="nav-auth.js"></script>
+    <script src="notifications.js"></script>
+  </body>
+</html>
+
+

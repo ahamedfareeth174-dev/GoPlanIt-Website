@@ -1,6 +1,3 @@
-# GoPlanIt-Website
-Build a static website for student planning using codex 
-[README.md](https://github.com/user-attachments/files/28521831/README.md)
 # GoPlanIt
 
 GoPlanIt is a browser-based student planner made by Ahamed Fareeth.

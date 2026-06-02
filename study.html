@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'" />
+    <meta name="referrer" content="no-referrer" />
+    <title>GoPlanIt - Study Mode</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Study mode</p>
+          <h1>Turn today into focused sessions.</h1>
+          <p class="subtext">GoPlanIt pulls from today's tasks and pinned notes to create a study flow.</p>
+        </div>
+        <div class="status-card">
+          <strong id="studyTimer">25:00</strong>
+          <span id="studyTimerLabel">Focus session ready.</span>
+        </div>
+      </header>
+
+      <nav class="page-actions" aria-label="Planner navigation">
+        <a class="link-button" href="index.html">Home</a>
+        <a class="link-button auth-only-search" href="search.html">Search</a>
+        <a class="link-button" href="notes.html">Notes</a>
+        <a class="link-button active" href="study.html">Study</a>
+        <a class="link-button" href="notifications.html">Notifications</a>
+        <a class="link-button" href="profile.html">Profile</a>
+        <a class="link-button" href="dashboard.html">Dashboard</a>
+      </nav>
+
+      <main class="study-grid">
+        <section class="study-focus-panel">
+          <div class="panel-header">
+            <h2>Focus timer</h2>
+            <p>Use a simple focus block, then take a short break.</p>
+          </div>
+          <div class="study-timer-card">
+            <strong id="studyTimerLarge">25:00</strong>
+            <div class="study-settings">
+              <label>
+                Study minutes
+                <input id="studyMinutes" type="number" min="1" max="180" step="1" value="25" />
+              </label>
+              <label>
+                Alarm sound
+                <select id="studySound">
+                  <option value="digital">Digital alarm</option>
+                  <option value="urgent">Urgent beeps</option>
+                  <option value="siren">Rising siren</option>
+                  <option value="school">School bell</option>
+                </select>
+              </label>
+            </div>
+            <p class="study-alarm-note">Alarm plays when the countdown reaches zero. Use Test alarm to preview it.</p>
+            <div class="study-presets" aria-label="Study timer presets">
+              <button type="button" data-minutes="15">15 min</button>
+              <button type="button" data-minutes="25">25 min</button>
+              <button type="button" data-minutes="45">45 min</button>
+              <button type="button" data-minutes="60">60 min</button>
+            </div>
+            <div class="study-actions">
+              <button id="startStudy" class="btn btn-primary" type="button">Start</button>
+              <button id="pauseStudy" class="btn btn-secondary" type="button">Pause</button>
+              <button id="resetStudy" class="btn btn-secondary" type="button">Reset</button>
+              <button id="testSound" class="btn btn-secondary alarm" type="button">Test alarm</button>
+            </div>
+          </div>
+        </section>
+        <section class="study-focus-panel">
+          <div class="panel-header">
+            <h2>Today's study plan</h2>
+            <p>Generated from your current reminders and pinned notes.</p>
+          </div>
+          <div id="studyPlanList" class="study-plan-list"></div>
+        </section>
+
+        <section class="study-focus-panel study-materials-panel">
+          <div class="panel-header">
+            <h2>Study materials</h2>
+            <p>Upload note files or paste study notes. GoPlanIt will summarize readable notes in-browser.</p>
+          </div>
+          <div class="study-upload-box">
+            <label>
+              Add files
+              <input
+                id="studyMaterialInput"
+                type="file"
+                multiple
+                accept=".txt,.md,.csv,.json,.html,.htm,.pdf,.doc,.docx"
+              />
+            </label>
+            <label>
+              Paste notes
+              <textarea id="studyMaterialNotes" rows="5" placeholder="Paste lecture notes, study notes, or key points to summarize..."></textarea>
+            </label>
+            <label>
+              Note font
+              <select id="studyNoteFont">
+                <option value="system">Clean sans</option>
+                <option value="serif">Book serif</option>
+                <option value="mono">Study mono</option>
+                <option value="rounded">Rounded</option>
+                <option value="script">Handwritten</option>
+              </select>
+            </label>
+            <div class="study-export-actions">
+              <button id="summarizePastedNotes" class="btn btn-primary" type="button">Summarize</button>
+              <button id="exportStudyWord" class="btn btn-secondary" type="button">Word doc</button>
+              <button id="exportStudyPdf" class="btn btn-secondary" type="button">PDF</button>
+            </div>
+          </div>
+          <div id="studyMaterialList" class="study-material-list"></div>
+        </section>
+
+        <section class="study-focus-panel study-quiz-panel">
+          <div class="panel-header">
+            <h2>Fake AI quiz builder</h2>
+            <p>Create practice questions from your uploaded guide or pasted notes.</p>
+          </div>
+          <div class="quiz-controls">
+            <label>
+              Study guide
+              <select id="quizMaterialSelect"></select>
+            </label>
+            <label>
+              Questions
+              <input id="quizQuestionCount" type="number" min="3" max="10" step="1" value="5" />
+            </label>
+            <div class="quiz-actions">
+              <button id="generateQuiz" class="btn btn-primary" type="button">Generate quiz</button>
+              <button id="checkQuiz" class="btn btn-secondary" type="button">Check answers</button>
+            </div>
+          </div>
+          <div id="quizOutput" class="quiz-output"></div>
+        </section>
+      </main>
+    </div>
+
+    <div id="studyAlarmModal" class="modal-backdrop study-alarm-backdrop" hidden>
+      <section class="task-modal study-alarm-modal" role="dialog" aria-modal="true" aria-labelledby="studyAlarmTitle">
+        <p class="eyebrow">Study alarm</p>
+        <h2 id="studyAlarmTitle">Time is up.</h2>
+        <p>Your focus session ended. Stop the alarm when you are ready to move on or take a break.</p>
+        <div class="study-alarm-actions">
+          <button id="stopAlarm" class="btn btn-primary" type="button">Stop alarm</button>
+          <button id="restartStudy" class="btn btn-secondary" type="button">Restart timer</button>
+        </div>
+      </section>
+    </div>
+
+    <script src="nav-auth.js"></script>
+    <script src="study.js"></script>
+  </body>
+</html>
+
+

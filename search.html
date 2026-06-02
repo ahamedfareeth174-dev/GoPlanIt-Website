@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'" />
+    <meta name="referrer" content="no-referrer" />
+    <title>GoPlanIt - Search</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">Global search</p>
+          <h1>Find anything in your planner.</h1>
+          <p class="subtext">Search tasks, assignments, exams, reminders, and notes from one command center.</p>
+        </div>
+        <div class="status-card">
+          <strong id="searchCount">0 results</strong>
+          <span>Search stays local to this browser.</span>
+        </div>
+      </header>
+
+      <nav class="page-actions" aria-label="Planner navigation">
+        <a class="link-button" href="index.html">Home</a>
+        <a class="link-button active auth-only-search" href="search.html">Search</a>
+        <a class="link-button" href="notes.html">Notes</a>
+        <a class="link-button" href="study.html">Study</a>
+        <a class="link-button" href="notifications.html">Notifications</a>
+        <a class="link-button" href="profile.html">Profile</a>
+        <a class="link-button" href="dashboard.html">Dashboard</a>
+        <a class="link-button" href="calendar.html">Calendar</a>
+      </nav>
+
+      <main class="search-shell">
+        <label class="global-search-box">
+          Search GoPlanIt
+          <input id="globalSearchInput" type="search" placeholder="Try biology, essay, exam, project..." autofocus />
+        </label>
+        <div class="search-filter-row">
+          <button class="note-filter active" type="button" data-kind="all">All</button>
+          <button class="note-filter" type="button" data-kind="task">Tasks</button>
+          <button class="note-filter" type="button" data-kind="note">Notes</button>
+        </div>
+        <section id="searchResults" class="search-results"></section>
+      </main>
+    </div>
+
+    <script src="nav-auth.js"></script>
+    <script src="search.js"></script>
+  </body>
+</html>
+
+

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'" />
+    <meta name="referrer" content="no-referrer" />
+    <title>GoPlanIt Calendar</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">GoPlanIt Calendar</p>
+          <h1>Monthly task calendar</h1>
+          <p class="subtext">Add, edit, and review your reminders from one monthly calendar.</p>
+        </div>
+        <div class="status-card">
+          <strong>Calendar</strong>
+          <span>Tasks load automatically from your planner.</span>
+        </div>
+      </header>
+
+      <nav class="page-actions" aria-label="Planner navigation">
+        <a class="link-button" href="index.html">Home</a>
+        <a class="link-button auth-only-search" href="search.html">Search</a>
+        <a class="link-button" href="notes.html">Notes</a>
+        <a class="link-button" href="study.html">Study</a>
+        <a class="link-button" href="notifications.html">Notifications</a>
+        <a class="link-button" href="profile.html">Profile</a>
+        <a class="link-button" href="dashboard.html">Dashboard</a>
+        <a class="link-button active" href="calendar.html">Calendar</a>
+      </nav>
+
+      <main class="calendar-grid-layout">
+        <aside class="calendar-sidebar">
+          <div class="panel-header">
+            <h2>Monthly calendar</h2>
+            <p>Add tasks here and review them by month.</p>
+          </div>
+          <div class="option-block">
+            <label>
+              Month
+              <select id="calendarMonth">
+                <option value="0">January</option>
+                <option value="1">February</option>
+                <option value="2">March</option>
+                <option value="3">April</option>
+                <option value="4">May</option>
+                <option value="5">June</option>
+                <option value="6">July</option>
+                <option value="7">August</option>
+                <option value="8">September</option>
+                <option value="9">October</option>
+                <option value="10">November</option>
+                <option value="11">December</option>
+              </select>
+            </label>
+          </div>
+          <div class="option-block">
+            <label>
+              Year
+              <input id="calendarYear" type="number" min="1970" max="2100" />
+            </label>
+          </div>
+          <div class="option-block">
+            <label>
+              Selected day
+              <select id="calendarDay">
+                <option value="Mon">Mon</option>
+                <option value="Tue">Tue</option>
+                <option value="Wed">Wed</option>
+                <option value="Thu">Thu</option>
+                <option value="Fri">Fri</option>
+                <option value="Sat">Sat</option>
+                <option value="Sun">Sun</option>
+              </select>
+            </label>
+          </div>
+          <div class="option-block">
+            <label>
+              Schedule start
+              <input id="calendarStart" type="time" value="08:00" />
+            </label>
+          </div>
+          <div class="option-block">
+            <label>
+              Schedule end
+              <input id="calendarEnd" type="time" value="18:00" />
+            </label>
+          </div>
+          <div class="option-block">
+            <button id="reloadCalendar" class="btn btn-primary">Refresh calendar</button>
+          </div>
+          <div class="option-block">
+            <button id="clearTimeline" class="btn btn-secondary">Clear timeline</button>
+          </div>
+          <div class="info-card">
+            <h3>How it works</h3>
+            <ul>
+              <li>Your planner tasks are read from saved data.</li>
+              <li>Month mode follows the real calendar from January through December.</li>
+              <li>Click a date to add assignments, exams, reminders, and tasks.</li>
+              <li>Edit selected-date tasks below the month.</li>
+              <li>Clearing the timeline removes saved planner tasks.</li>
+            </ul>
+          </div>
+        </aside>
+
+        <section class="calendar-panel">
+          <div id="calendarSummary" class="timeline-summary"></div>
+          <div id="calendarView" class="calendar-view"></div>
+        </section>
+      </main>
+    </div>
+
+    <div id="dayTasksModal" class="modal-backdrop" hidden>
+      <section class="task-modal day-tasks-modal" role="dialog" aria-modal="true" aria-labelledby="dayTasksTitle">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">Selected day</p>
+            <h2 id="dayTasksTitle">Tasks for this day</h2>
+          </div>
+          <button id="closeDayTasksModal" class="action-btn" type="button" aria-label="Close day tasks">x</button>
+        </div>
+        <div id="dayTasksList" class="day-tasks-list"></div>
+        <div class="modal-actions">
+          <button id="addTaskFromDayModal" class="btn btn-primary" type="button">Add task</button>
+          <button id="doneDayTasksModal" class="btn btn-secondary" type="button">Done</button>
+        </div>
+      </section>
+    </div>
+
+    <div id="taskModal" class="modal-backdrop" hidden>
+      <section class="task-modal" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
+        <div class="modal-header">
+          <div>
+            <p class="eyebrow">New calendar item</p>
+            <h2 id="taskModalTitle">Add task</h2>
+          </div>
+          <button id="closeTaskModal" class="action-btn" type="button" aria-label="Close modal">×</button>
+        </div>
+        <div class="wizard-progress">
+          <span id="wizardProgressText">Step 1</span>
+          <div><span id="wizardProgressBar"></span></div>
+        </div>
+        <form id="calendarTaskForm" class="calendar-task-form wizard-form">
+          <label class="wizard-step" data-step="category">
+            What are you adding?
+            <select id="calendarTaskCategory">
+              <option value="assignment">Homework / assignment</option>
+              <option value="exam">Exam reminder</option>
+              <option value="reminder" selected>Basic reminder</option>
+              <option value="task">Task</option>
+            </select>
+          </label>
+          <label class="wizard-step" data-step="text" hidden>
+            Task
+            <input id="calendarTaskText" type="text" placeholder="What needs to get done?" required />
+          </label>
+          <label class="wizard-step" data-step="notes" hidden>
+            Brief notes
+            <textarea id="calendarTaskNotes" rows="4" placeholder="Write a quick reminder note."></textarea>
+          </label>
+          <label class="wizard-step" data-step="type" hidden>
+            Type
+            <select id="calendarTaskType">
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+            </select>
+          </label>
+          <div class="wizard-step wizard-note" data-step="due-confirm" hidden>
+            <strong>Due date</strong>
+            <span id="assignmentDueDateText">This homework will use the date you clicked.</span>
+          </div>
+          <input id="calendarTaskDueDate" type="hidden" />
+          <input id="calendarTaskDay" type="hidden" />
+          <label class="wizard-step" data-step="priority" hidden>
+            Priority
+            <select id="calendarTaskPriority">
+              <option value="high">High</option>
+              <option value="medium" selected>Medium</option>
+              <option value="low">Low</option>
+            </select>
+          </label>
+          <label class="wizard-step" data-step="time" hidden>
+            Start time
+            <input id="calendarTaskTime" type="time" value="08:00" />
+          </label>
+          <label class="wizard-step" data-step="hours" hidden>
+            Estimated hours
+            <input id="calendarTaskHours" type="number" min="0.25" step="0.25" value="1" />
+          </label>
+          <div class="modal-actions">
+            <button id="cancelTaskModal" class="btn btn-secondary" type="button">Cancel</button>
+            <button id="wizardBack" class="btn btn-secondary" type="button">Back</button>
+            <button id="wizardNext" class="btn btn-primary" type="button">Next</button>
+            <button id="wizardSubmit" class="btn btn-primary" type="submit" hidden>Add to calendar</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <script src="nav-auth.js"></script>
+    <script src="calendar.js"></script>
+  </body>
+</html>
+
+

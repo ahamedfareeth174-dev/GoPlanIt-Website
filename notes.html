@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'" />
+    <meta name="referrer" content="no-referrer" />
+    <title>GoPlanIt - Notes</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div>
+          <p class="eyebrow">GoPlanIt Notes</p>
+          <h1>Write, organize, and turn thoughts into study fuel.</h1>
+          <p class="subtext">Capture class notes, project ideas, review lists, and reminders in a focused notes workspace.</p>
+        </div>
+        <div class="status-card">
+          <strong id="notesCount">0 notes</strong>
+          <span id="notesStatus">Saved locally for this account.</span>
+        </div>
+      </header>
+
+      <nav class="page-actions" aria-label="Planner navigation">
+        <a class="link-button" href="index.html">Home</a>
+        <a class="link-button auth-only-search" href="search.html">Search</a>
+        <a class="link-button active" href="notes.html">Notes</a>
+        <a class="link-button" href="study.html">Study</a>
+        <a class="link-button" href="notifications.html">Notifications</a>
+        <a class="link-button" href="profile.html">Profile</a>
+        <a class="link-button" href="dashboard.html">Dashboard</a>
+        <a class="link-button" href="calendar.html">Calendar</a>
+      </nav>
+
+      <main class="notes-workspace">
+        <aside class="notes-sidebar">
+          <button id="newNoteButton" class="btn btn-primary" type="button">New note</button>
+          <label class="notes-search">
+            Search notes
+            <input id="notesSearch" type="search" placeholder="Search title, text, tag..." />
+          </label>
+
+          <div class="notes-filter-group" role="group" aria-label="Note filters">
+            <button class="note-filter active" type="button" data-filter="all">All</button>
+            <button class="note-filter" type="button" data-filter="pinned">Pinned</button>
+            <button class="note-filter" type="button" data-filter="study">Study</button>
+            <button class="note-filter" type="button" data-filter="projects">Projects</button>
+            <button class="note-filter" type="button" data-filter="ideas">Ideas</button>
+            <button class="note-filter" type="button" data-filter="archive">Archive</button>
+          </div>
+
+          <div class="notes-insight-card">
+            <span>Writing rhythm</span>
+            <strong id="notesWordCount">0 words</strong>
+            <p>Longer notes are easier to review when you split them with headings and action items.</p>
+          </div>
+        </aside>
+
+        <section class="notes-list-panel">
+          <div class="panel-header">
+            <h2>Your notes</h2>
+            <p>Pin important notes and use categories to keep school work tidy.</p>
+          </div>
+          <div id="notesList" class="notes-list"></div>
+        </section>
+
+        <section class="notes-editor-panel">
+          <div class="panel-header">
+            <h2>Editor</h2>
+            <p id="noteEditedLabel">Choose a note or create a new one.</p>
+          </div>
+          <div class="notes-editor">
+            <input id="noteTitle" class="note-title-input" type="text" placeholder="Note title" />
+            <div class="note-meta-grid">
+              <label>
+                Category
+                <select id="noteCategory">
+                  <option value="study">Study</option>
+                  <option value="projects">Projects</option>
+                  <option value="ideas">Ideas</option>
+                  <option value="personal">Personal</option>
+                </select>
+              </label>
+              <label>
+                Color
+                <select id="noteColor">
+                  <option value="green">Green</option>
+                  <option value="blue">Blue</option>
+                  <option value="yellow">Yellow</option>
+                  <option value="pink">Pink</option>
+                </select>
+              </label>
+              <label>
+                Tags
+                <input id="noteTags" type="text" placeholder="exam, chapter 4, essay" />
+              </label>
+            </div>
+            <textarea id="noteBody" rows="16" placeholder="Start writing your note..."></textarea>
+            <div class="note-editor-actions">
+              <button id="saveNoteButton" class="btn btn-primary" type="button">Save note</button>
+              <button id="makeTaskButton" class="btn btn-secondary" type="button">Turn into task</button>
+              <button id="pinNoteButton" class="btn btn-secondary" type="button">Pin</button>
+              <button id="archiveNoteButton" class="btn btn-secondary" type="button">Archive</button>
+              <button id="deleteNoteButton" class="btn btn-secondary danger" type="button">Delete</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="nav-auth.js"></script>
+    <script src="notes.js"></script>
+  </body>
+</html>
+
+

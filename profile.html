@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'" />
+    <meta name="referrer" content="no-referrer" />
+    <title>GoPlanIt - Profile</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header profile-header">
+        <div>
+          <p class="eyebrow">GoPlanIt Profile</p>
+          <h1 id="profileGreeting">Make the planner feel like yours.</h1>
+          <p class="subtext">Customize your account, dashboard banner, and planner colors in one place.</p>
+        </div>
+        <div class="status-card profile-mini-card">
+          <div id="profileAvatar" class="profile-avatar large">GP</div>
+          <strong id="profileAccountText">Guest planner</strong>
+          <span>Your settings save to this browser account.</span>
+        </div>
+      </header>
+
+      <nav class="page-actions" aria-label="Planner navigation">
+        <a class="link-button" href="index.html">Home</a>
+        <a class="link-button auth-only-search" href="search.html">Search</a>
+        <a class="link-button" href="notes.html">Notes</a>
+        <a class="link-button" href="study.html">Study</a>
+        <a class="link-button" href="notifications.html">Notifications</a>
+        <a class="link-button active" href="profile.html">Profile</a>
+        <a class="link-button" href="dashboard.html">Dashboard</a>
+        <a class="link-button" href="calendar.html">Calendar</a>
+      </nav>
+
+      <main class="profile-page-grid">
+        <section class="profile-card profile-settings-card">
+          <div class="panel-header">
+            <h2>Account</h2>
+            <p>Update how GoPlanIt greets you.</p>
+          </div>
+
+          <div class="option-block">
+            <label>
+              Display name
+              <input id="profileName" type="text" placeholder="Your name" />
+            </label>
+          </div>
+
+          <div class="option-block">
+            <span class="setting-label">Banner image</span>
+            <div id="bannerSwatches" class="banner-swatches polished">
+              <button class="banner-swatch aurora" type="button" data-banner="aurora">Aurora</button>
+              <button class="banner-swatch sunrise" type="button" data-banner="sunrise">Sunrise</button>
+              <button class="banner-swatch midnight" type="button" data-banner="midnight">Midnight</button>
+              <button class="banner-swatch meadow" type="button" data-banner="meadow">Meadow</button>
+            </div>
+          </div>
+
+          <div class="option-block visually-hidden">
+            <label>
+              Banner image
+              <select id="profileBanner">
+                <option value="aurora">Aurora</option>
+                <option value="sunrise">Sunrise</option>
+                <option value="midnight">Midnight</option>
+                <option value="meadow">Meadow</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="profile-color-grid">
+            <label>
+              Accent color
+              <input id="profileAccent" type="color" value="#22c55e" />
+            </label>
+            <label>
+              Planner background
+              <input id="profileBackground" type="color" value="#09121d" />
+            </label>
+          </div>
+
+          <div class="option-block">
+            <label class="checkbox-label theme-toggle-row">
+              <input id="profileDarkMode" type="checkbox" />
+              Dark mode
+            </label>
+          </div>
+
+          <div class="profile-actions">
+            <button id="saveProfile" class="btn btn-primary" type="button">Save profile</button>
+            <button id="logoutButton" class="btn btn-secondary" type="button">Log out</button>
+          </div>
+          <div id="profileStatus" class="form-message" role="status"></div>
+        </section>
+
+        <section class="profile-preview-card">
+          <div class="panel-header">
+            <h2>Live preview</h2>
+            <p>This is how your dashboard personality will carry across GoPlanIt.</p>
+          </div>
+          <div class="profile-preview-banner">
+            <p class="eyebrow">Dashboard</p>
+            <h3 id="profilePreviewName">Welcome back, Planner.</h3>
+            <p>Today's reminders, weekly plan, and calendar colors will use this theme.</p>
+          </div>
+          <div class="profile-stat-grid">
+            <div>
+              <span>Theme</span>
+              <strong id="profileThemeName">Aurora</strong>
+            </div>
+            <div>
+              <span>Accent</span>
+              <strong id="profileAccentValue">#22c55e</strong>
+            </div>
+            <div>
+              <span>Background</span>
+              <strong id="profileBackgroundValue">#09121d</strong>
+            </div>
+            <div>
+              <span>Mode</span>
+              <strong id="profileModeValue">Light</strong>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="database.js"></script>
+    <script src="nav-auth.js"></script>
+    <script src="profile.js"></script>
+  </body>
+</html>
+
+
